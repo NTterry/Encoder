@@ -1,7 +1,7 @@
 #include "Encoder.h"
 
-
 ENCODER  Encoder1Data;
+static int32_t s_dir = 0;
 
 /************************************************************
   * @brief   求出两次时间的差值
@@ -49,7 +49,11 @@ int32_t Enc_DiffCnt(uint16_t c1,uint16_t c2)
 	{
 		Angle += ENCODER_TIM_PERIOD;
 	}
-	return Angle;
+  /*修改计数方向，同时会修改速度和加速度的方向  Terry 2020.2.18*/
+  if(s_dir)
+    Angle = -Angle;
+
+	return -Angle; 
 }
 
 
@@ -202,8 +206,9 @@ void EncoderCacuMs(void)
     {
         uint16_t counter;
         // 编码绝对值
-		counter = __HAL_TIM_GET_COUNTER(&htim4); 
+		    counter = __HAL_TIM_GET_COUNTER(&htim4); 
         Encoder1Data.PerTick = Enc_DiffCnt(Encoder1Data.LastResCnt,counter);
+
         Encoder1Data.TotalCnt += Encoder1Data.PerTick;
         Encoder1Data.TotalCnt1 += Encoder1Data.PerTick;
         Encoder1Data.LastResCnt = counter;
@@ -212,6 +217,6 @@ void EncoderCacuMs(void)
         Encoder1Data.Speed = Encoder1Data.PerTick * 2500 / SPTIMEOUT;
         Encoder1Data.Acce = 0;
         Encoder1Data.Sta = SP_DELAY100MS;
-		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+		    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
     }
 }
